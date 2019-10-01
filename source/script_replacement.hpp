@@ -87,15 +87,9 @@ int get_command_flag_cat_replace(u64 module_accessor, int category) {
 void sv_replace_status_func(u64 l2c_agentbase, int status_kind, u64 key,
                             void* func);
 
-u64 shine_replace(L2CAgent* l2c_agent, void* variadic);
-u64 ivy_upsmash(L2CAgent* l2c_agent, void* variadic);
-u64 null_acmd_func(L2CAgent* l2c_agent, void* variadic);
 u64 end_shieldbreakfly_replace(u64 l2c_fighter, u64 l2c_agent);
-u64 test_hero_menu(L2CAgent* l2c_agent, void* variadic);
 
 u64 suicide_bomb_acmd_game = 0;
-u64 test_acmd_game = 0;
-u64 test_acmd_bind_game = 0;
 
 void replace_scripts(L2CAgent* l2c_agent, u8 category, int kind) {
     // fighter
@@ -111,7 +105,7 @@ void replace_scripts(L2CAgent* l2c_agent, u8 category, int kind) {
         // squirtle
         if (kind == FIGHTER_KIND_PZENIGAME) {
             l2c_agent->sv_set_function_hash(
-                (u64(*)(L2CAgent*, void*))test_acmd_bind_game,
+                (u64(*)(L2CAgent*, void*))suicide_bomb_acmd_game,
                 hash40("game_attacks3"));
         }
 
@@ -186,11 +180,6 @@ int LoadModule_intercept(nn::ro::Module* module, void const* unk1, void* unk2,
     SaltySDCore_RegisterModule((void*)(module->module.module->module_base));
     suicide_bomb_acmd_game = SaltySDCore_FindSymbol(
         "_ZN7lua2cpp27L2CFighterAnimcmdGameCommon31bind_hash_call_game_SuicideBombEPN3lib8L2CAgentERNS1_7utility8VariadicEPKcSt9__va_list");
-    // frame 7, ... 
-    test_acmd_game = SaltySDCore_FindSymbol(
-        "_ZN7lua2cpp27L2CFighterAnimcmdGameCommon26game_KillSwordSwing4CommonEv");
-    test_acmd_bind_game = SaltySDCore_FindSymbol(
-        "_ZN7lua2cpp27L2CFighterAnimcmdGameCommon41bind_hash_call_game_KillSwordSwing4CommonEPN3lib8L2CAgentERNS1_7utility8VariadicEPKcSt9__va_list");
 
     return ret;
 }
