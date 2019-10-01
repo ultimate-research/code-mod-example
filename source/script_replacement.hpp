@@ -17,8 +17,7 @@ using namespace app::lua_bind;
 
 L2CAgent* fighter_agents[8];
 
-#define NUM_ACMD_FUNCTIONS 3
-ACMD acmd_objs[NUM_ACMD_FUNCTIONS] = {
+ACMD acmd_objs[] = {
     ACMD("BATTLE_OBJECT_CATEGORY_FIGHTER", "FIGHTER_KIND_PZENIGAME", "attack_hi3", "game_attackhi3", 
     [] (ACMD* acmd) -> void { 
         acmd->frame(5);
@@ -73,8 +72,8 @@ int get_command_flag_cat_replace(u64 module_accessor, int category) {
     L2CAgent* l2c_agent = fighter_agents[fighter_entry];
 
     if (category == 0 && l2c_agent && l2c_agent->lua_state_agent && app::sv_system::battle_object_module_accessor(l2c_agent->lua_state_agent) == module_accessor) {
-        for (size_t i = 0; i < NUM_ACMD_FUNCTIONS; i++)
-            acmd_objs[i].run(l2c_agent);
+        for (ACMD acmd_obj : acmd_objs)
+            acmd_obj.run(l2c_agent);
         fighter_agents[fighter_entry] = 0;
     }
 
@@ -94,8 +93,8 @@ void replace_scripts(L2CAgent* l2c_agent, u8 category, int kind) {
         int fighter_entry = WorkModule::get_int(module_accessor, FIGHTER_INSTANCE_WORK_ID_INT_ENTRY_ID);
         fighter_agents[fighter_entry] = l2c_agent;
 
-        for (size_t i = 0; i < NUM_ACMD_FUNCTIONS; i++)
-            acmd_objs[i].nullify_original(l2c_agent);
+        for (ACMD acmd_obj : acmd_objs)
+            acmd_obj.nullify_original(l2c_agent);
 
         // squirtle
         if (kind == FIGHTER_KIND_PZENIGAME) {
