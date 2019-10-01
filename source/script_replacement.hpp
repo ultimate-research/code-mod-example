@@ -11,14 +11,11 @@
 
 #include "acmd_wrapper.h"
 
-#include <stdlib.h>
-
 using namespace lib;
 using namespace app::sv_animcmd;
 using namespace app::lua_bind;
 
 L2CAgent* fighter_agents[8];
-u64 fighter_module_accessors[8];
 
 #define NUM_ACMD_FUNCTIONS 3
 ACMD acmd_objs[NUM_ACMD_FUNCTIONS] = {
@@ -73,19 +70,18 @@ int get_command_flag_cat_replace(u64 module_accessor, int category) {
     int flag = get_command_flag_cat(control_module, category);
 
     int fighter_entry = WorkModule::get_int(module_accessor, FIGHTER_INSTANCE_WORK_ID_INT_ENTRY_ID);
-    fighter_module_accessors[fighter_entry] = module_accessor;
     L2CAgent* l2c_agent = fighter_agents[fighter_entry];
 
-    if (category == 0 && l2c_agent) {
+    if (category == 0 && l2c_agent && l2c_agent->lua_state_agent && app::sv_system::battle_object_module_accessor(l2c_agent->lua_state_agent) == module_accessor) {
         for (size_t i = 0; i < NUM_ACMD_FUNCTIONS; i++)
             acmd_objs[i].run(l2c_agent);
+        fighter_agents[fighter_entry] = 0;
     }
 
     return flag;
 }
 
-void sv_replace_status_func(u64 l2c_agentbase, int status_kind, u64 key,
-                            void* func);
+void sv_replace_status_func(u64 l2c_agentbase, int status_kind, u64 key, void* func);
 
 u64 end_shieldbreakfly_replace(u64 l2c_fighter, u64 l2c_agent);
 
@@ -96,8 +92,7 @@ void replace_scripts(L2CAgent* l2c_agent, u8 category, int kind) {
     if (category == BATTLE_OBJECT_CATEGORY_FIGHTER) {
         u64 module_accessor = app::sv_system::battle_object_module_accessor(l2c_agent->lua_state_agent);
         int fighter_entry = WorkModule::get_int(module_accessor, FIGHTER_INSTANCE_WORK_ID_INT_ENTRY_ID);
-        if (fighter_module_accessors[fighter_entry] == module_accessor)
-            fighter_agents[fighter_entry] = l2c_agent;
+        fighter_agents[fighter_entry] = l2c_agent;
 
         for (size_t i = 0; i < NUM_ACMD_FUNCTIONS; i++)
             acmd_objs[i].nullify_original(l2c_agent);
