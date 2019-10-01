@@ -16,6 +16,7 @@ using namespace app::sv_animcmd;
 using namespace app::lua_bind;
 
 L2CAgent* fighter_agents[8];
+u64 fighter_module_accessors[8];
 
 ACMD acmd_objs[] = {
     ACMD("BATTLE_OBJECT_CATEGORY_FIGHTER", "FIGHTER_KIND_PZENIGAME", "attack_hi3", "game_attackhi3", 
@@ -71,10 +72,9 @@ int get_command_flag_cat_replace(u64 module_accessor, int category) {
     int fighter_entry = WorkModule::get_int(module_accessor, FIGHTER_INSTANCE_WORK_ID_INT_ENTRY_ID);
     L2CAgent* l2c_agent = fighter_agents[fighter_entry];
 
-    if (category == 0 && l2c_agent && l2c_agent->lua_state_agent && app::sv_system::battle_object_module_accessor(l2c_agent->lua_state_agent) == module_accessor) {
+    if (category == 0 && fighter_module_accessors[fighter_entry] == module_accessor && l2c_agent && l2c_agent->lua_state_agent && app::sv_system::battle_object_module_accessor(l2c_agent->lua_state_agent) == module_accessor) {
         for (ACMD acmd_obj : acmd_objs)
             acmd_obj.run(l2c_agent);
-        fighter_agents[fighter_entry] = 0;
     }
 
     return flag;
@@ -91,6 +91,7 @@ void replace_scripts(L2CAgent* l2c_agent, u8 category, int kind) {
     if (category == BATTLE_OBJECT_CATEGORY_FIGHTER) {
         u64 module_accessor = app::sv_system::battle_object_module_accessor(l2c_agent->lua_state_agent);
         int fighter_entry = WorkModule::get_int(module_accessor, FIGHTER_INSTANCE_WORK_ID_INT_ENTRY_ID);
+        fighter_module_accessors[fighter_entry] = module_accessor;
         fighter_agents[fighter_entry] = l2c_agent;
 
         for (ACMD acmd_obj : acmd_objs)
