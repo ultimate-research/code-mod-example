@@ -15,7 +15,7 @@
 
 #include "saltysd/saltysd_helper.h"
 
-#include "script_replacement.hpp"
+#include "script_replacement.h"
 
 extern "C" {
 	extern u32 __start__;
