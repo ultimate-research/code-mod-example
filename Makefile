@@ -29,7 +29,7 @@ include $(DEVKITPRO)/libnx/switch_rules
 #     - icon.jpg
 #     - <libnx folder>/default_icon.jpg
 #---------------------------------------------------------------------------------
-TARGET		:=	acmd
+TARGET		:=	$(CURDIR)
 BUILD		:=	build
 SOURCES		:=	source code-mod-framework/framework/source code-mod-framework/framework/source/saltysd code-mod-framework/framework/source/imports/lib code-mod-framework/framework/source/useful
 DATA		:=	data
