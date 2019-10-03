@@ -31,12 +31,14 @@ int get_command_flag_cat_replace(u64 module_accessor, int category) {
     int (*get_command_flag_cat)(u64, int) = (int (*)(u64, int)) load_module_impl(control_module, 0x350);
     int flag = get_command_flag_cat(control_module, category);
 
-    int fighter_entry = WorkModule::get_int(module_accessor, FIGHTER_INSTANCE_WORK_ID_INT_ENTRY_ID);
-    L2CAgent* l2c_agent = fighter_agents[fighter_entry];
-
-    if (category == 0 && fighter_module_accessors[fighter_entry] == module_accessor && l2c_agent && l2c_agent->lua_state_agent && app::sv_system::battle_object_module_accessor(l2c_agent->lua_state_agent) == module_accessor) {
-        for (ACMD acmd_obj : acmd_objs)
-            acmd_obj.run(l2c_agent);
+    if (category == 0) {
+        int fighter_entry = WorkModule::get_int(module_accessor, FIGHTER_INSTANCE_WORK_ID_INT_ENTRY_ID);
+        L2CAgent* l2c_agent = fighter_agents[fighter_entry];
+        if (fighter_module_accessors[fighter_entry] == module_accessor && l2c_agent && l2c_agent->lua_state_agent 
+            && app::sv_system::battle_object_module_accessor(l2c_agent->lua_state_agent) == module_accessor) {
+            for (ACMD& acmd_obj : acmd_objs)
+                acmd_obj.run(l2c_agent);
+        }
     }
 
     return flag;
@@ -50,7 +52,7 @@ void replace_scripts(L2CAgent* l2c_agent, u8 category, int kind) {
         fighter_module_accessors[fighter_entry] = module_accessor;
         fighter_agents[fighter_entry] = l2c_agent;
 
-        for (ACMD acmd_obj : acmd_objs)
+        for (ACMD& acmd_obj : acmd_objs)
             acmd_obj.nullify_original(l2c_agent);
     }
 }
@@ -64,8 +66,7 @@ void* sv_get_status_func(u64 l2c_agentbase, int status_kind, u64 key) {
     return 0;
 }
 
-void sv_replace_status_func(u64 l2c_agentbase, int status_kind, u64 key,
-                            void* func) {
+void sv_replace_status_func(u64 l2c_agentbase, int status_kind, u64 key, void* func) {
     u64 unk48 = LOAD64(l2c_agentbase + 0x48);
     u64 unk50 = LOAD64(l2c_agentbase + 0x50);
     if (0x2E8BA2E8BA2E8BA3LL * ((unk50 - unk48) >> 4) > (u64)status_kind) {
