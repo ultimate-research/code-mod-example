@@ -16,6 +16,7 @@
 #include "saltysd/saltysd_helper.h"
 
 #include "script_replacement.h"
+// #include "file_replacement.h"
 
 extern "C" {
 	extern u32 __start__;
@@ -83,6 +84,7 @@ int main(int argc, char *argv[]) {
 
 	// Necessary for script replacement
 	script_replacement();
+	// file_replacement();
 	
 	// Add function replacements here
 

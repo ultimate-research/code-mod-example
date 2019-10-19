@@ -18,6 +18,42 @@ using namespace app::FL_sv_module_access;
 using namespace app::sv_system;
 using namespace app::lua_bind;
 
+static int f_mode = 0;
+
+typedef struct FileSystemAccessor
+{
+    void* unk1; // nn::fs::detail::FileAccessor
+    void* unk2;
+    void* unk3;
+    void* mutex; // nn::os::Mutex
+    uint64_t val1;
+    uint64_t mode;
+} FileSystemAccessor;
+
+namespace nn::fs
+{
+    struct FileHandle
+    {
+        FileSystemAccessor* wrap;
+        
+        bool operator==(const FileHandle& comp)
+        {
+            return (wrap == comp.wrap);
+        }
+    };
+
+    struct WriteOption
+    {
+        u64 ptr_maybe;
+    };
+
+    extern Result OpenFile(nn::fs::FileHandle* out, char const* path, int mode) asm("_ZN2nn2fs8OpenFileEPNS0_10FileHandleEPKci") LINKABLE;
+    extern Result ReadFile(unsigned long* read, nn::fs::FileHandle handle, long offset, void* out, unsigned long size) asm("_ZN2nn2fs8ReadFileEPmNS0_10FileHandleElPvm") LINKABLE;
+    extern Result ReadFile(nn::fs::FileHandle handle, long offset, void* out, unsigned long size) asm("_ZN2nn2fs8ReadFileENS0_10FileHandleElPvm") LINKABLE;
+    extern Result CloseFile(nn::fs::FileHandle f) asm("_ZN2nn2fs9CloseFileENS0_10FileHandleE") LINKABLE;
+    extern Result WriteFile(nn::fs::FileHandle, long, void const*, unsigned long, nn::fs::WriteOption const&) asm("_ZN2nn2fs9WriteFileENS0_10FileHandleElPKvmRKNS0_11WriteOptionE") LINKABLE;
+}
+
 ACMD acmd_objs[] = {
     ACMD("BATTLE_OBJECT_CATEGORY_FIGHTER", "FIGHTER_KIND_PZENIGAME", "attack_hi3", "game_attackhi3", 
     [] (ACMD* acmd) -> void { 
@@ -25,6 +61,17 @@ ACMD acmd_objs[] = {
         if (acmd->is_excute()) {
             acmd->ATTACK(/*ID*/ 0, /*Part*/ 0, /*Bone*/ hash40("head"), /*Damage*/ 15.0, /*Angle*/ 88, /*KBG*/ 100, /*FKB*/ 0, /*BKB*/ 30, /*Size*/ 10.0, /*X*/ 1.7, /*Y*/ 0.7, /*Z*/ 0.7, /*X2*/ 1.7, /*Y2*/ 0.7, /*Z2*/ 0.7, /*Hitlag*/ 1.0, /*SDI*/ 1.0, /*Clang/Rebound*/ ATTACK_SETOFF_KIND_ON, /*FacingRestrict*/ ATTACK_LR_CHECK_POS, /*SetWeight*/ false, /*ShieldDamage*/ 0, /*Trip*/ 0.0, /*Rehit*/ 0, /*Reflectable*/ false, /*Absorbable*/ false, /*Flinchless*/ false, /*DisableHitlag*/ false, /*Direct/Indirect*/ true, /*Ground/Air*/ COLLISION_SITUATION_MASK_GA, /*Hitbits*/ COLLISION_CATEGORY_MASK_ALL, /*CollisionPart*/ COLLISION_PART_MASK_ALL, /*FriendlyFire*/ false, /*Effect*/ hash40("collision_attr_fire"), /*SFXLevel*/ ATTACK_SOUND_LEVEL_M, /*SFXType*/ COLLISION_SOUND_ATTR_PUNCH, /*Type*/ ATTACK_REGION_HEAD);
             acmd->ATTACK(/*ID*/ 1, /*Part*/ 0, /*Bone*/ hash40("hip"), /*Damage*/ 15.0, /*Angle*/ 88, /*KBG*/ 100, /*FKB*/ 0, /*BKB*/ 30, /*Size*/ 10.0, /*X*/ 1.7, /*Y*/ 1.2, /*Z*/ 1.2, /*X2*/ 1.7, /*Y2*/ 1.2, /*Z2*/ 1.2, /*Hitlag*/ 1.0, /*SDI*/ 1.0, /*Clang/Rebound*/ ATTACK_SETOFF_KIND_ON, /*FacingRestrict*/ ATTACK_LR_CHECK_POS, /*SetWeight*/ false, /*ShieldDamage*/ 0, /*Trip*/ 0.0, /*Rehit*/ 0, /*Reflectable*/ false, /*Absorbable*/ false, /*Flinchless*/ false, /*DisableHitlag*/ false, /*Direct/Indirect*/ true, /*Ground/Air*/ COLLISION_SITUATION_MASK_GA, /*Hitbits*/ COLLISION_CATEGORY_MASK_ALL, /*CollisionPart*/ COLLISION_PART_MASK_ALL, /*FriendlyFire*/ false, /*Effect*/ hash40("collision_attr_fire"), /*SFXLevel*/ ATTACK_SOUND_LEVEL_M, /*SFXType*/ COLLISION_SOUND_ATTR_PUNCH, /*Type*/ ATTACK_REGION_HEAD);
+            nn::fs::FileHandle f;
+            int ret = nn::fs::OpenFile(&f, "rom:/test.log", 1);
+            if (ret == 0) {
+                char* buffer = "butt string";
+                ret = nn::fs::ReadFile(f, 0, buffer, 11);
+                buffer[11] = '\0';
+                if (ret == 0) {
+                    print_string(acmd->module_accessor, "NICE");
+                }
+                nn::fs::CloseFile(f);
+            }
         }
 
         acmd->wait(2);

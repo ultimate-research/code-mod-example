@@ -91,7 +91,84 @@ u64 clear_lua_stack_replace(L2CAgent* l2c_agent) {
     return l2c_agent->_clear_lua_stack();
 }
 
+
+Result OpenFile_intercept(nn::fs::FileHandle* out, char const* path, int mode)
+{
+    Result ret = nn::fs::OpenFile(out, path, mode);
+    debug_log("SaltySD Plugin: OpenFile(%llx, \"%s\", %llx) -> %llx,%p\n", out, path, mode, ret, *out);
+    
+    //TODO: closing
+    if (!strcmp(path, "rom:/data.arc"))
+    {
+        // data_arc_handles = (nn::fs::FileHandle*)realloc(data_arc_handles, ++num_data_arc_handles * sizeof(FileSystemAccessor*));
+        // data_arc_handles[num_data_arc_handles-1] = *out;
+    }
+
+    return ret;
+}
+
+Result ReadFile_intercept(unsigned long* read, nn::fs::FileHandle handle, long offset, void* out, unsigned long size)
+{
+    Result ret = nn::fs::ReadFile(read, handle, offset, out, size);
+    debug_log("SaltySD Plugin: ReadFile(%llx, %llx, %llx, %llx, %llx) -> %llx\n", read, handle, offset, out, size, ret);
+    return ret;
+}
+
+Result WriteFile_intercept(nn::fs::FileHandle handle, long idk, void const* in, unsigned long size, nn::fs::WriteOption const& opt)
+{
+    Result ret = nn::fs::WriteFile(handle, idk, in, size, opt);
+    f_mode = idk;
+    return ret;
+}
+
+Result ReadFile_intercept2(nn::fs::FileHandle handle, long offset, void* out, unsigned long size)
+{
+    Result ret = nn::fs::ReadFile(handle, offset, out, size);
+    debug_log("SaltySD Plugin: ReadFile2(%p, %llx, %p, %llx) -> %llx\n", handle, offset, out, size, ret);
+
+    // u32 index = 0;
+    // for (index = 0; index < num_data_arc_handles; index++)
+    // {
+    //     if (handle == data_arc_handles[index]) break;
+    // }
+    
+    // // Handle not data.arc
+    // if (index == num_data_arc_handles) return ret;
+    
+    if (offset == 0xBA0ACDF8)
+    {
+        f_mode = 10;
+        debug_log("WOLF\nSaltySD Plugin: ReadFile2(%p, %llx, %p, %llx)\n", handle, offset, out, size);
+
+        /*void** tp = (void**)((u8*)armGetTls() + 0x1F8);
+        *tp = malloc(0x1000);
+        
+        FILE* f = fopen("sdmc:/SaltySD/smash/prebuilt/nro/release/lua2cpp_wolf.nro", "rb");
+        if (f)
+        {
+            fseek(f, offset - 0xb7720d08, SEEK_SET);
+            size_t read = fread(out, size, 1, f);
+            fclose(f);
+            
+            debug_log("read %zx bytes\n", read);
+        }
+        else
+        {
+            debug_log("Failed to open sdmc:/SaltySD/smash/prebuilt/nro/release/lua2cpp_wolf.nro\n");
+        }
+        
+        free(tp);
+        return 0;*/
+    }
+
+    return ret;
+}
+
 void script_replacement() {
+    SaltySDCore_ReplaceImport("_ZN2nn2fs8ReadFileEPmNS0_10FileHandleElPvm", (void*)ReadFile_intercept);
+    SaltySDCore_ReplaceImport("_ZN2nn2fs8ReadFileENS0_10FileHandleElPvm", (void*)ReadFile_intercept2);
+    SaltySDCore_ReplaceImport("_ZN2nn2fs8OpenFileEPNS0_10FileHandleEPKci", (void*)OpenFile_intercept);
+    SaltySDCore_ReplaceImport("_ZN2nn2fs9WriteFileENS0_10FileHandleElPKvmRKNS0_11WriteOptionE", (void*)WriteFile_intercept);
     SaltySD_function_replace_sym_check_prev(
         "_ZN3app8lua_bind40ControlModule__get_command_flag_cat_implEPNS_26BattleObjectModuleAccessorEi",
         (u64)&get_command_flag_cat_replace,
