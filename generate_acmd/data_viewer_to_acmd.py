@@ -54,8 +54,8 @@ for line in lines:
 	f_type = function_type(f_name)
 		
 	if f_type == "app::lua_bind":
-		module_name = f_name.split("_")[0]
-		module_func_name = '_'.join(f_name.split("_")[2:])
+		module_name = f_name.split("::")[-2]
+		module_func_name = f_name.split("::")[-1]
 		args_str = line[line.index("(")+1:line.index(")")]
 		
 		if shouldTab:
